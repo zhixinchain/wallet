@@ -6,7 +6,8 @@ import (
 	"crypto/sha256"
 	// "fmt"
 	"log"
-	"strings"
+	// "strings"
+	"crypto/rand"
 	"math/big"
 
 	"golang.org/x/crypto/ripemd160"
@@ -96,8 +97,8 @@ const privKeyBytesLen = 32
 
 func newKeyPair() ([]byte, []byte) {
 	curve := elliptic.P256()
-	// private, err := ecdsa.GenerateKey(curve, rand.Reader)
-	private, err := ecdsa.GenerateKey(curve, strings.NewReader("YYw5c5AqqWLBdgRdLbVwNGZYmsvn8yPzi6RUA1LCgSwDfe3xrRKsd"))
+	private, err := ecdsa.GenerateKey(curve, rand.Reader)
+	//private, err := ecdsa.GenerateKey(curve, strings.NewReader("YYw5c5AqqWLBdgRdLbVwNGZYmsvn8yPzi6RUA1LCgSwDfe3xrRKsd"))
 	if err != nil {
 		log.Panic(err)
 	}
