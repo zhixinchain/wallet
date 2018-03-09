@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 )
 
 func ByteString(b []byte) (s string) {
@@ -53,6 +54,68 @@ func B58encode(b []byte) (s string) {
 	}
 
 	return s
+}
+
+func B58decode(s string) (b []byte) {
+	/* See https://en.bitcoin.it/wiki/Base58Check_encoding */
+	
+	const BITCOIN_BASE58_TABLE = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+	big58 := big.NewInt(58)
+	x := big.NewInt(0)
+	tempBig := big.NewInt(0)
+	zero := uint8(0)
+
+	for i := 0; i < len(s); i++ {
+		tempBig.SetInt64(int64(strings.IndexByte(BITCOIN_BASE58_TABLE, s[i])))
+		x = x.Mul(x,big58)
+		x = x.Add(x,tempBig)
+	}
+
+	bcpy := x.Bytes();
+	if (strings.Index(s,"1") == 0){
+		bcpy = append([]byte{zero},x.Bytes()...)
+	}
+	
+	return bcpy
+}
+
+func CheckAddresss(s string) (bo bool){
+	b := B58decode(s);
+
+	if(len(b)<25){
+		return false
+	}
+
+	checksum := b[len(b)-4:len(b)]
+	bcpy := b[0:len(b)-4]
+
+	/* Create a new SHA256 context */
+	sha256H := sha256.New()
+
+	/* SHA256 Hash #1 */
+	sha256H.Reset()
+	sha256H.Write(bcpy)
+	hash1 := sha256H.Sum(nil)
+	// fmt.Println(byteString(hash1))
+
+	/* SHA256 Hash #2 */
+	sha256H.Reset()
+	sha256H.Write(hash1)
+	hash2 := sha256H.Sum(nil)
+	// fmt.Println(byteString(hash2))
+
+	if (ByteString(hash2[0:4]) == ByteString(checksum)) {
+		// fmt.Print("\n")
+		// fmt.Print(byteString(hash2[0:4]))
+		// fmt.Print("true")
+		return true
+	} else {
+		// fmt.Print("\n")
+		// fmt.Print(byteString(hash2[0:4]))
+		// fmt.Print( byteString(bcpy))
+		// fmt.Print("false")
+		return false
+	}
 }
 
 // B58checkencode encodes version ver and byte slice b into a base-58 check encoded string.
